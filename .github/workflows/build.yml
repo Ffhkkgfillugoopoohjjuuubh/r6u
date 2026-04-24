@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    working-directory: ./echo_ai_new
     
     steps:
       - uses: actions/checkout@v4
@@ -17,9 +18,6 @@ jobs:
         with:
           flutter-version: '3.24.0'
           
-      - name: Enter project folder
-        run: cd echo_ai_new
-        
       - name: Get dependencies
         run: flutter pub get
         
@@ -31,4 +29,4 @@ jobs:
         if: success()
         with:
           name: app-release.apk
-          path: echo_ai_new/build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
