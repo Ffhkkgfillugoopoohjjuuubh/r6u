@@ -1,0 +1,36 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.7'
+          
+      - name: Update dependencies
+        run: cd echo_ai_new && flutter pub upgrade google_mobile_ads --major-versions
+        
+      - name: Get dependencies
+        run: cd echo_ai_new && flutter pub get
+        
+      - name: Build APK
+        run: cd echo_ai_new && flutter build apk --release
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: app-release.apk
+          path: echo_ai_new/build/app/outputs/flutter-apk/app-release.apk
