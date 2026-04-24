@@ -1,0 +1,33 @@
+# Logs
+*.log
+logs/
+*.keystore
+key.jks
+
+# Local configuration (sensitive)
+android/local.properties
+
+# Build output
+build/
+.android/build/
+
+# Flutter
+.pub-cache/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+version.json
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NDK Downloads
+ndk.zip
+temp_ndk.exe
