@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.echoai.app.echo_ai_new"
-    compileSdk = 34
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     buildFeatures { prefab = false }
 
@@ -22,7 +23,7 @@ android {
     defaultConfig {
         applicationId = "com.echoai.app.echo_ai_new"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
