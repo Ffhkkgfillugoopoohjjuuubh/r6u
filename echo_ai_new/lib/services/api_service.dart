@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String kGroqApiKey = String.fromEnvironment('GROQ_API_KEY', defaultValue: 'YOUR_GROQ_API_KEY_HERE');
+const String kGroqApiKey = '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';
 const String kGroqApiUrl = 'https://api.groq.com/openai/v1/chat/completions';
 const String kModel = 'llama-3.1-8b-instant';
 
