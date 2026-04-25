@@ -8,23 +8,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+          
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.41.7'
           
       - name: Get dependencies
-        run: flutter pub get
+        run: cd echo_ai_new && flutter pub get
         
       - name: Build APK
-        run: flutter build apk --release
+        run: cd echo_ai_new && flutter build apk --release -DGROQ_API_KEY="$GROQ_API_KEY"
         
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: app-release.apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: echo_ai_new/build/app/outputs/flutter-apk/app-release.apk
