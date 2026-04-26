@@ -7,6 +7,13 @@ class OcrService {
   OcrService._internal();
 
   final ImagePicker _imagePicker = ImagePicker();
+  String? _lastExtractedText;
+  
+  String? get lastExtractedText => _lastExtractedText;
+  
+  void clearLastExtractedText() {
+    _lastExtractedText = null;
+  }
 
   Future<String?> extractFromGallery() async {
     try {
