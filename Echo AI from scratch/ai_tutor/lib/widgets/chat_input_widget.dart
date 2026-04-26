@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../l10n/app_localizations.dart';
 import '../config/app_config.dart';
 
@@ -54,12 +55,19 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppDimens.inputRadius),
+        border: Border.all(
+          color: isDark 
+              ? AppColors.darkTextSecondary.withValues(alpha: 0.2)
+              : Colors.grey.withValues(alpha: 0.2),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -73,88 +81,95 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               IconButton(
                 icon: Icon(
                   Icons.add_circle_outline,
-                  color: AppColors.primaryBlue,
+                  color: AppColors.primaryPurple,
                 ),
                 onPressed: widget.onOcrPressed,
               ),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBackground : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(AppDimens.inputRadius),
-                  ),
-                  child: TextField(
-                    controller: widget.controller,
-                    style: GoogleFonts.inter(color: textColor),
-                    decoration: InputDecoration(
-                      hintText: l10n.typeMessage,
-                      hintStyle: GoogleFonts.inter(color: secondaryTextColor),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                child: TextField(
+                  controller: widget.controller,
+                  style: GoogleFonts.inter(color: textColor),
+                  decoration: InputDecoration(
+                    hintText: 'Message Echo',
+                    hintStyle: GoogleFonts.inter(color: secondaryTextColor),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
                     ),
-                    maxLines: 4,
-                    minLines: 1,
-                    textInputAction: TextInputAction.send,
-                    onChanged: (value) {
-                      widget.onTextChanged?.call(value);
-                    },
-                    onSubmitted: (value) {
-                      if (value.isNotEmpty) {
-                        widget.onSend(value);
-                        widget.controller.clear();
-                      }
-                    },
                   ),
+                  maxLines: 4,
+                  minLines: 1,
+                  textInputAction: TextInputAction.send,
+                  onChanged: (value) {
+                    widget.onTextChanged?.call(value);
+                  },
+                  onSubmitted: (value) {
+                    if (value.isNotEmpty) {
+                      widget.onSend(value);
+                      widget.controller.clear();
+                    }
+                  },
                 ),
               ),
-              const SizedBox(width: 8),
               AnimatedContainer(
                 duration: AppDimens.animationDuration,
                 curve: AppDimens.animationCurve,
-                decoration: BoxDecoration(
-                  color: widget.isLoading 
-                      ? AppColors.primaryBlue.withValues(alpha: 0.5)
-                      : _hasText 
-                          ? AppColors.primaryBlue 
-                          : AppColors.primaryBlue.withValues(alpha: 0.3),
-                  shape: BoxShape.circle,
-                  boxShadow: _hasText && !widget.isLoading
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                      : null,
-                ),
                 child: widget.isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ? Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryPurple.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
                           ),
                         ),
                       )
-                    : IconButton(
-                        icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                        onPressed: _hasText
-                            ? () {
-                                final text = widget.controller.text.trim();
-                                if (text.isNotEmpty) {
-                                  widget.onSend(text);
-                                  widget.controller.clear();
-                                }
-                              }
-                            : null,
-                      ),
+                    : AnimatedOpacity(
+                        opacity: _hasText ? 1.0 : 0.5,
+                        duration: AppDimens.animationDuration,
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _hasText 
+                                ? AppColors.primaryPurple 
+                                : AppColors.primaryPurple.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                            boxShadow: _hasText
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primaryPurple.withValues(alpha: 0.4),
+                                      blurRadius: 12,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
+                            onPressed: _hasText
+                                ? () {
+                                    final text = widget.controller.text.trim();
+                                    if (text.isNotEmpty) {
+                                      widget.onSend(text);
+                                      widget.controller.clear();
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ).animate().fadeIn(duration: 200.ms),
               ),
             ],
           ),

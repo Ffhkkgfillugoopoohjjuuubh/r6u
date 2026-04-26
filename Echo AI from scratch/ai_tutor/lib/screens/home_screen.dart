@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../config/app_config.dart';
 import '../providers/chat_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/chat_session.dart';
 import '../widgets/session_drawer.dart';
-import '../widgets/home_input_bar.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
+import 'main_scaffold.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -51,7 +50,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
-    final themeState = ref.watch(themeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     
@@ -103,7 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           },
                         ),
                         Text(
-                          l10n.echo,
+                          'Echo AI',
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
@@ -133,16 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   Expanded(
-                    child: chatState.sessions.isEmpty
-                        ? _buildWelcomeContent(isDark, textColor, secondaryTextColor, l10n)
-                        : _buildSessionsList(chatState.sessions, isDark, textColor, secondaryTextColor, l10n),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: HomeInputBar(
-                      controller: _inputController,
-                      onSend: _startNewChat,
-                    ),
+                    child: _buildWelcomeContent(isDark, textColor, secondaryTextColor, l10n),
                   ),
                 ],
               ),
@@ -151,6 +140,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildWelcomeContent(bool isDark, Color textColor, Color secondaryTextColor, AppLocalizations l10n) {
+    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -158,22 +149,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primaryBlue.withValues(alpha: 0.3),
-                    AppColors.primaryBlue.withValues(alpha: 0.1),
+                    AppColors.primaryPurple.withValues(alpha: 0.3),
+                    AppColors.primaryPurple.withValues(alpha: 0.1),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.auto_awesome,
-                size: 64,
-                color: AppColors.primaryBlue,
+              child: Center(
+                child: Text(
+                  'E',
+                  style: GoogleFonts.inter(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryPurple,
+                  ),
+                ),
               ),
             )
                 .animate()
@@ -181,7 +178,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 .scale(begin: const Offset(0.8, 0.8)),
             const SizedBox(height: 32),
             Text(
-              l10n.helloImEcho,
+              'Hello, I am Echo',
               style: GoogleFonts.inter(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -193,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 .slideY(begin: 0.2),
             const SizedBox(height: 8),
             Text(
-              l10n.personalAiAssistant,
+              'How can I help you today',
               style: GoogleFonts.inter(
                 fontSize: 16,
                 color: secondaryTextColor,
@@ -212,11 +209,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     entry.value,
                     style: GoogleFonts.inter(fontSize: 14),
                   ),
-                  backgroundColor: isDark 
-                      ? AppColors.darkSurface 
-                      : AppColors.lightSurface,
+                  backgroundColor: backgroundColor,
                   side: BorderSide(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                    color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.chipRadius),
                   ),
                   onPressed: () => _onPromptSelected(entry.value),
                 )
@@ -232,86 +230,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   static const List<String> _suggestedPrompts = [
-    'Explain quantum computing simply',
-    'Help me write a poem about nature',
-    'What is machine learning?',
-    'Teach me about photosynthesis',
+    'Explain a concept to me',
+    'Help me with math',
+    'Translate something',
+    'Quiz me on a topic',
   ];
-
-  Widget _buildSessionsList(List<ChatSession> sessions, bool isDark, Color textColor, Color secondaryTextColor, AppLocalizations l10n) {
-    final dateFormat = DateFormat('d MMM y');
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final session = sessions[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-            border: Border.all(
-              color: AppColors.primaryBlue.withValues(alpha: 0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.chat_bubble_outline,
-                color: AppColors.primaryBlue,
-                size: 24,
-              ),
-            ),
-            title: Text(
-              session.name,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              dateFormat.format(session.updatedAt),
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: secondaryTextColor,
-              ),
-            ),
-            trailing: Icon(
-              Icons.chevron_right,
-              color: secondaryTextColor,
-            ),
-            onTap: () {
-              ref.read(chatProvider.notifier).selectSession(session);
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const ChatScreen(),
-                  transitionDuration: const Duration(milliseconds: 300),
-                  transitionsBuilder: (_, animation, __, child) {
-                    return SlideTransition(
-                      position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                          .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-                      child: child,
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        )
-            .animate()
-            .fadeIn(delay: (index * 100).ms, duration: 300.ms)
-            .slideX(begin: 0.1);
-      },
-    );
-  }
 }

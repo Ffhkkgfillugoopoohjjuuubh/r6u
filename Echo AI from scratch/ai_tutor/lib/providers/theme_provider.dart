@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeState {
   final ThemeMode themeMode;
@@ -34,14 +34,15 @@ class ThemeState {
 }
 
 class ThemeNotifier extends StateNotifier<ThemeState> {
-  final StorageService _storage;
+  final SharedPreferences _prefs;
+  static const String _themeKey = 'app_theme';
 
-  ThemeNotifier(this._storage) : super(const ThemeState()) {
+  ThemeNotifier(this._prefs) : super(const ThemeState()) {
     _loadTheme();
   }
 
   void _loadTheme() {
-    final themeString = _storage.getThemeMode();
+    final themeString = _prefs.getString(_themeKey) ?? 'system';
     state = ThemeState(
       themeMode: ThemeState.themeModeFromString(themeString),
       themeString: themeString,
@@ -49,7 +50,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
   }
 
   Future<void> setThemeMode(String mode) async {
-    await _storage.setThemeMode(mode);
+    await _prefs.setString(_themeKey, mode);
     state = ThemeState(
       themeMode: ThemeState.themeModeFromString(mode),
       themeString: mode,
@@ -58,5 +59,5 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 }
 
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeState>((ref) {
-  return ThemeNotifier(StorageService());
+  return ThemeNotifier(SharedPreferences.getInstance() as SharedPreferences);
 });

@@ -43,6 +43,7 @@ class ChatSessionData {
   final DateTime createdAt;
   final DateTime lastModified;
   final List<ChatMessage> messages;
+  final bool isStarred;
 
   ChatSessionData({
     required this.id,
@@ -50,6 +51,7 @@ class ChatSessionData {
     required this.createdAt,
     required this.lastModified,
     this.messages = const [],
+    this.isStarred = false,
   });
 
   factory ChatSessionData.fromJson(Map<String, dynamic> json) {
@@ -62,6 +64,7 @@ class ChatSessionData {
               ?.map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
               .toList() ??
           [],
+      isStarred: json['isStarred'] as bool? ?? false,
     );
   }
 
@@ -72,6 +75,7 @@ class ChatSessionData {
       'createdAt': createdAt.toIso8601String(),
       'lastModified': lastModified.toIso8601String(),
       'messages': messages.map((m) => m.toJson()).toList(),
+      'isStarred': isStarred,
     };
   }
 
@@ -81,6 +85,7 @@ class ChatSessionData {
     DateTime? createdAt,
     DateTime? lastModified,
     List<ChatMessage>? messages,
+    bool? isStarred,
   }) {
     return ChatSessionData(
       id: id ?? this.id,
@@ -88,6 +93,7 @@ class ChatSessionData {
       createdAt: createdAt ?? this.createdAt,
       lastModified: lastModified ?? this.lastModified,
       messages: messages ?? this.messages,
+      isStarred: isStarred ?? this.isStarred,
     );
   }
 }
@@ -224,6 +230,17 @@ class StorageService {
     final files = dir.listSync().where((e) => e is File && e.path.endsWith('.json')).toList();
     for (final entity in files) {
       entity.deleteSync();
+    }
+  }
+
+  Future<void> setSessionStarred(String sessionId, bool starred) async {
+    final session = await loadSession(sessionId);
+    if (session != null) {
+      final updated = session.copyWith(
+        isStarred: starred,
+        lastModified: DateTime.now(),
+      );
+      await saveSession(updated);
     }
   }
 

@@ -77,8 +77,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
       name: s.name,
       createdAt: s.createdAt,
       updatedAt: s.lastModified,
+      isStarred: s.isStarred,
     )).toList();
     state = state.copyWith(sessions: sessions, isLoading: false);
+  }
+
+  Future<void> toggleStar(String sessionId) async {
+    final session = state.sessions.firstWhere((s) => s.id == sessionId);
+    final newStarred = !session.isStarred;
+    await _storage.setSessionStarred(sessionId, newStarred);
+    
+    final sessions = state.sessions.map((s) {
+      if (s.id == sessionId) {
+        return s.copyWith(isStarred: newStarred);
+      }
+      return s;
+    }).toList();
+    
+    final currentSession = state.currentSession?.id == sessionId
+        ? session.copyWith(isStarred: newStarred)
+        : state.currentSession;
+    
+    state = state.copyWith(sessions: sessions, currentSession: currentSession);
   }
 
   Future<void> createSession(String name) async {

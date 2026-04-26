@@ -242,12 +242,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         backgroundColor: backgroundColor,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         title: GestureDetector(
           onTap: () {
             if (chatState.currentSession != null) {
@@ -304,9 +298,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         },
         onSessionDeleted: (id) {
           ref.read(chatProvider.notifier).deleteSession(id);
-          if (chatState.sessions.length <= 1) {
-            Navigator.pushReplacementNamed(context, '/');
-          }
+          Navigator.pop(context);
         },
         onSessionRename: (session) {
           Navigator.pop(context);
@@ -317,7 +309,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Navigator.pop(context);
         },
         onHomePressed: () {
-          Navigator.pushReplacementNamed(context, '/');
+          Navigator.pop(context);
         },
         onSettingsPressed: () {
           Navigator.pop(context);
@@ -358,10 +350,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          size: 60,
-                          color: AppColors.primaryBlue.withValues(alpha: 0.5),
+                        Text(
+                          'E',
+                          style: GoogleFonts.inter(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryPurple,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -384,33 +379,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.all(16),
                     itemCount: chatState.messages.length + (chatState.isTyping ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == chatState.messages.length && chatState.isTyping) {
-                        return Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.auto_awesome,
-                                  size: 16,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _ThinkingIndicator(),
-                              ),
-                            ],
-                          ),
-                        );
+                        return _buildThinkingIndicator();
                       }
 
                       final message = chatState.messages[index];
@@ -435,7 +408,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 ref,
                               );
                         },
-                      );
+                      )
+                          .animate()
+                          .fadeIn(duration: 250.ms)
+                          .slideY(begin: 0.1);
                     },
                   ),
           ),
@@ -469,143 +445,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
   }
-}
 
-class _ThinkingIndicator extends StatefulWidget {
-  const _ThinkingIndicator();
-
-  @override
-  State<_ThinkingIndicator> createState() => _ThinkingIndicatorState();
-}
-
-class _ThinkingIndicatorState extends State<_ThinkingIndicator> with TickerProviderStateMixin {
-  late AnimationController _bounceController;
-  late Animation<double> _bounceAnimation1;
-  late Animation<double> _bounceAnimation2;
-  late Animation<double> _bounceAnimation3;
-  int _textIndex = 0;
-  Timer? _textTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    )..repeat();
-
-    _bounceAnimation1 = Tween<double>(begin: 0, end: -6).animate(
-      CurvedAnimation(parent: _bounceController, curve: const SinCurve(0)),
-    );
-    _bounceAnimation2 = Tween<double>(begin: 0, end: -6).animate(
-      CurvedAnimation(parent: _bounceController, curve: const SinCurve(0.25)),
-    );
-    _bounceAnimation3 = Tween<double>(begin: 0, end: -6).animate(
-      CurvedAnimation(parent: _bounceController, curve: const SinCurve(0.5)),
-    );
-
-    _textTimer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
-      if (mounted) setState(() => _textIndex = (_textIndex + 1) % 3);
-    });
-  }
-
-  @override
-  void dispose() {
-    _bounceController.dispose();
-    _textTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildThinkingIndicator() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final l10n = AppLocalizations.of(context)!;
-    final texts = [l10n.thinking, l10n.analyzing, l10n.preparingResponse];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            AnimatedBuilder(
-              animation: _bounceAnimation1,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _bounceAnimation1.value),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                );
-              },
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            AnimatedBuilder(
-              animation: _bounceAnimation2,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _bounceAnimation2.value),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                );
-              },
-            ),
-            AnimatedBuilder(
-              animation: _bounceAnimation3,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _bounceAnimation3.value),
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 400),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          child: Text(
-            texts[_textIndex],
-            key: ValueKey(_textIndex),
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: textColor,
+            child: Text(
+              'E',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryPurple,
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Row(
+            children: List.generate(3, (index) {
+              return Container(
+                margin: const EdgeInsets.only(right: 6),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryPurple,
+                ),
+              )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(),
+                  )
+                  .scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.2, 1.2),
+                    duration: 600.ms,
+                    delay: (index * 200).ms,
+                    curve: Curves.easeInOut,
+                  );
+            }),
+          ),
+        ],
+      ),
     );
-  }
-}
-
-class SinCurve extends Curve {
-  final double offset;
-  const SinCurve([this.offset = 0]);
-
-  @override
-  double transform(double t) {
-    return (math.sin((t + offset) * math.pi * 2) + 1) / 2;
   }
 }

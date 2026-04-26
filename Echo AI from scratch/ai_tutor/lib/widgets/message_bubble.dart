@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../config/app_config.dart';
 import '../models/chat_message.dart';
 import '../services/tts_service.dart';
@@ -44,16 +46,16 @@ class MessageBubble extends StatelessWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
           decoration: BoxDecoration(
-            color: AppColors.primaryBlue,
+            color: AppColors.primaryPurple,
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-              bottomLeft: Radius.circular(20),
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
               bottomRight: Radius.circular(4),
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                color: AppColors.primaryPurple.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -99,10 +101,10 @@ class MessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : Colors.white,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
             bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(20),
+            bottomRight: Radius.circular(18),
           ),
           border: Border.all(
             color: isDark 
@@ -125,15 +127,21 @@ class MessageBubble extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    width: 24,
+                    height: 24,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.auto_awesome,
-                      size: 14 * fontSize,
-                      color: AppColors.primaryBlue,
+                    child: Center(
+                      child: Text(
+                        'E',
+                        style: GoogleFonts.inter(
+                          fontSize: 12 * fontSize,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryPurple,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -142,7 +150,7 @@ class MessageBubble extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12 * fontSize,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryBlue,
+                      color: AppColors.primaryPurple,
                     ),
                   ),
                 ],
@@ -160,7 +168,7 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 8, 10),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -171,49 +179,80 @@ class MessageBubble extends StatelessWidget {
                       color: isDark ? AppColors.darkTextSecondary : Colors.black54,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  StreamBuilder<String?>(
-                    stream: _ttsService.speakingIdStream,
-                    builder: (context, snapshot) {
-                      final speakingId = snapshot.data;
-                      final showStop = speakingId == message.id;
-                      return GestureDetector(
-                        onTap: onSpeak,
-                        child: AnimatedContainer(
-                          duration: AppDimens.animationDuration,
-                          curve: AppDimens.animationCurve,
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: isTtsPreparing 
-                                ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                                : showStop 
-                                    ? Colors.red.withValues(alpha: 0.1)
-                                    : AppColors.primaryBlue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: isTtsPreparing
-                              ? SizedBox(
-                                  width: 16 * fontSize,
-                                  height: 16 * fontSize,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primaryBlue,
-                                  ),
-                                )
-                              : Icon(
-                                  showStop ? Icons.stop_rounded : Icons.volume_up_rounded,
-                                  size: 18 * fontSize,
-                                  color: showStop ? Colors.red : AppColors.primaryBlue,
-                                ),
+                  const SizedBox(width: 12),
+                  _buildIconButton(
+                    icon: Icons.copy,
+                    size: 18 * fontSize,
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: message.content));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Copied to clipboard'),
+                          duration: Duration(seconds: 1),
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildIconButton(
+                    icon: isTtsPlaying ? Icons.stop : Icons.volume_up,
+                    size: 18 * fontSize,
+                    isPlaying: isTtsPlaying,
+                    isLoading: isTtsPreparing,
+                    onTap: onSpeak,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildIconButton(
+                    icon: Icons.thumb_up_outlined,
+                    size: 18 * fontSize,
+                    onTap: () {},
+                  ),
+                  const SizedBox(width: 8),
+                  _buildIconButton(
+                    icon: Icons.thumb_down_outlined,
+                    size: 18 * fontSize,
+                    onTap: () {},
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required double size,
+    bool isPlaying = false,
+    bool isLoading = false,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isPlaying 
+              ? Colors.red.withValues(alpha: 0.1)
+              : AppColors.primaryPurple.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: isLoading
+            ? SizedBox(
+                width: size,
+                height: size,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primaryPurple,
+                ),
+              )
+            : Icon(
+                icon,
+                size: size,
+                color: isPlaying ? Colors.red : AppColors.primaryPurple,
+              ),
       ),
     );
   }
