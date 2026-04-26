@@ -25,6 +25,11 @@ void main() async {
   
   final prefs = await SharedPreferences.getInstance();
   final savedLocale = prefs.getString('app_locale') ?? 'en';
+  final savedVoiceLang = prefs.getString('voice_language');
+  if (savedVoiceLang != null) {
+    final code = savedVoiceLang == 'hi' ? 'hi-IN' : (savedVoiceLang == 'bn' ? 'bn-IN' : 'en-US');
+    await TtsService().setLanguage(code);
+  }
   
   runApp(
     ProviderScope(

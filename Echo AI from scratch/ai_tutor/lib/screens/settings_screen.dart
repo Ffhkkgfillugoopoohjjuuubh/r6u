@@ -93,10 +93,12 @@ class SettingsScreen extends ConsumerWidget {
                     _LanguageSelector(
                       title: l10n.voiceLanguage,
                       selectedLanguage: settings.voiceLanguage,
-                      onChanged: (lang) {
+                      onChanged: (lang) async {
                         ref.read(settingsProvider.notifier).setVoiceLanguage(lang);
                         final code = lang == 'hi' ? 'hi-IN' : (lang == 'bn' ? 'bn-IN' : 'en-US');
-                        TtsService().setVoiceLanguage(code);
+                        await TtsService().setLanguage(code);
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('voice_language', lang);
                       },
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,

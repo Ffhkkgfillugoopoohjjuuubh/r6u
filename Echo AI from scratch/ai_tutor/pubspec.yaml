@@ -1,4 +1,4 @@
-name: ai_tutor
+name: echo_ai
 description: "Echo AI - Your Personal Learning Assistant"
 publish_to: 'none'
 version: 1.0.0+1

@@ -145,17 +145,19 @@ class TtsService {
   }
 
   List<String> _splitIntoSentences(String text) {
-    final sentences = <String>[];
+    final sentences = text.split(RegExp(r'(?<=[.?!])\s+'));
+    final filtered = sentences.where((s) => s.trim().isNotEmpty).map((s) => s.trim()).toList();
     
-    final parts = text.split(RegExp(r'[.?!]+\s+(?=[A-Z])|[.?!]+$'));
-    for (final part in parts) {
-      final trimmed = part.trim();
-      if (trimmed.isNotEmpty) {
-        sentences.add(trimmed);
+    final deduped = <String>[];
+    String? prev;
+    for (final s in filtered) {
+      if (s != prev) {
+        deduped.add(s);
+        prev = s;
       }
     }
     
-    return sentences;
+    return deduped;
   }
 
   Future<void> speak(String rawText, String messageId) async {
@@ -163,31 +165,22 @@ class TtsService {
     
     if (_speaking) {
       await stop();
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(Duration(milliseconds: 200));
     }
 
-    final translated = await _translateToLanguage(rawText);
+    String translated = await _translateToLanguage(rawText);
     
     await _tts.setLanguage(_languageCode);
+    await Future.delayed(Duration(milliseconds: 100));
     
     final cleaned = _clean(translated);
     final sentences = _splitIntoSentences(cleaned);
-    
-    // Deduplicate consecutive identical sentences
-    final deduped = <String>[];
-    String? prev;
-    for (final s in sentences) {
-      if (s != prev) {
-        deduped.add(s);
-        prev = s;
-      }
-    }
 
     _speaking = true;
     _currentMessageId = messageId;
     _speakingIdController.add(messageId);
 
-    for (final sentence in deduped) {
+    for (final sentence in sentences) {
       await _tts.speak(sentence);
     }
 
